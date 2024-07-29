@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    .list-group-item.active {
+      background-color: #0d6efd;
+      border-color: #0d6efd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg bg-dark border-body" data-bs-theme="dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/home">CoffeeShop</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="/order/cart?tableName=Table 1">Carts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/bill">Bills</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/manage-and-update/areas">Manage and update</a>
+              </li>
+          </ul>
+          <form class="d-flex mx-auto align-items-center mt-1" role="search">
+            <div class="input-group">
+              <input class="form-control" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+            </div>
+          </form>
+          <ul class="navbar-nav mb-2 mb-lg-0">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fa-solid fa-user"></i>
+                  <span th:text="${session.loggedInUser != null} ? ${session.loggedInUser.username} : ''"></span>
+                </a>
+              <ul class="dropdown-menu">
+                <li th:if="${session.loggedInUser != null}">
+                  <a class="dropdown-item" href="/users/logout">Logout</a>
+                </li>
+                <li th:if="${session.loggedInUser == null}">
+                  <a class="dropdown-item" href="/users/login">Login</a>
+                </li>
+                <li th:if="${session.loggedInUser == null}">
+                  <a class="dropdown-item" href="/users/register">Register</a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="row mt-4">
+      <div class="col-md-3">
+        <div class="list-group" id="sidebar">
+          <a th:each="tablename : ${tableNameList}" 
+             th:text="${tablename}" 
+             th:href="@{/order/cart(tableName=${tablename})}"
+             th:data-table-name="${tablename}"
+             th:classappend="${tablename == activeTableName} ? 'active' : ''"
+             class="list-group-item list-group-item-action">
+          </a>
+        </div>
+      </div>
+      <div class="col-md-9">
+  <div id="content1" class="content-section">
+    <div class="card">
+      <div class="card-header"></div>
+      <div class="card-body">
+        <div class="mb-4 d-flex" th:each="cartItem : ${cartList}">
+          <img th:src="${cartItem.drinkImage}" class="card-img-top" alt="..." style="object-fit: cover; height: 200px; width:200px;"/>
+          <div class="title mx-3 d-flex flex-column justify-content-center">
+            <h5 class="card-title" th:text="${cartItem.drinkName}"></h5>
+            <p class="card-text drink-price" th:text="${cartItem.drinkPrice}"></p>
+          </div>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="input-group">
+              <button class="btn btn-outline-secondary btn-decrease" type="button">-</button>
+              <span class="mx-1 drink-quantity" style="margin-top: 6px;" th:text="${cartItem.quantity <= 0 ? '1' : cartItem.quantity}"></span>
+              <button class="btn btn-outline-secondary btn-increase" type="button">+</button>
+              <span class="mx-1 drink-total-price" style="margin-top: 6px;" th:text="'='+ ${cartItem.quantity * cartItem.drinkPrice} + ' VND'"></span>
+
+            </div>
+            <button class="btn btn-danger mx-2 btn-remove" type="button">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    </div>
+    
+    
+     <div class="fixed-bottom bg-light p-3 border-top">
+  <div class="container d-flex justify-content-between align-items-center">
+    <h5>Total Price: <span id="totalPrice" th:text="${totalPrices} + ' VND'"></span></h5>
+    <button class="btn btn-primary  " type="button" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Checkout</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Checkout</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" th:text="'Total bill is' +' '+ ${totalPrices} + 'VND'">
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary checkout">Pay</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+  const sidebarItems = document.querySelectorAll('#sidebar .list-group-item');
+  const contentSection = document.querySelector('#content1');
+	const checkoutBtn = document.querySelector('.checkout')
+  function updateTotalPrice() {
+    let totalPrice = 0;
+    
+    document.querySelectorAll('.drink-total-price').forEach(function(spans) {
+      const priceText = spans.innerText.split('=')[1].trim().split(' ')[0]
+      console.log(priceText)
+      const price = parseFloat(priceText);
+      totalPrice += price;
+    });
+    const totalPriceElement = document.getElementById('totalPrice');
+    
+      totalPriceElement.innerText = totalPrice + ' VND';
+    	document.querySelector('.modal-body').innerText='Total bill is ' + totalPrice + 'VND';
+  }
+
+  function updateDrinkTotalPrice(parent) {
+    const priceElement = parent.querySelector('.drink-price');
+    const quantityElement = parent.querySelector('.drink-quantity');
+    const totalPriceElement = parent.querySelector('.drink-total-price');
+	
+    if (priceElement && quantityElement && totalPriceElement) {
+      const price = parseFloat(priceElement.innerText.replace(' VND', ''));
+      const quantity = parseInt(quantityElement.innerText);
+      const totalPrice = price * quantity;
+      totalPriceElement.innerText = `=${totalPrice} VND`;
+      updateTotalPrice();
+    } else {
+      console.error('One or more elements are missing:', { priceElement, quantityElement, totalPriceElement });
+    }
+  }
+
+  function attachEventListeners() {
+    const increaseQuantityButtons = document.querySelectorAll('.btn-increase');
+    const decreaseQuantityButtons = document.querySelectorAll('.btn-decrease');
+    const removeItemButtons = document.querySelectorAll('.btn-remove');
+	 
+    increaseQuantityButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const parent = this.closest('.mb-4');
+        const quantityElement = parent.querySelector('.drink-quantity');
+        if (quantityElement) {
+          let quantity = parseInt(quantityElement.innerText);
+          quantity += 1;
+          quantityElement.innerText = quantity;
+          updateCartItem(parent);
+        }
+      });
+    });
+
+    decreaseQuantityButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const parent = this.closest('.mb-4');
+        const quantityElement = parent.querySelector('.drink-quantity');
+        if (quantityElement) {
+          let quantity = parseInt(quantityElement.innerText);
+          if (quantity > 1) {
+            quantity -= 1;
+            quantityElement.innerText = quantity;
+            updateCartItem(parent);
+          }
+        }
+      });
+    });
+
+    removeItemButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const parent = this.closest('.mb-4');
+        removeCartItem(parent);
+      });
+    });
+  }
+  function createBill(){
+	 
+	   const activeItem = document.querySelector('.list-group-item-action.active');
+	   const tableName = activeItem.getAttribute('data-table-name')
+	   const totalPriceSpan = document.getElementById('totalPrice');
+       const totalPriceText = totalPriceSpan.textContent.trim();
+    	const totalPrice = parseFloat(totalPriceText.replace(' VND', '')); // Loại bỏ ' VND' và chuyển đổi thành số
+	  const data = {
+        tableName:tableName,
+        totalPrice:totalPrice
+      };
+      fetch('/order/createBill', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+       if (response.ok) {
+            // Thanh toán thành công
+            // Ẩn hoặc xóa các phần tử HTML của giỏ hàng
+            const modal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'));
+          	modal.hide();
+            const cartItems = document.querySelector('.card-body');
+            cartItems.innerHTML=''
+            const totalPriceElement = document.getElementById('totalPrice');
+    
+      		totalPriceElement.innerText = 0 + ' VND';
+            // Hiển thị thông báo thành công cho người dùng
+            alert('Payment successful!');
+        } else {
+            // Xử lý lỗi từ máy chủ (ví dụ: hiển thị thông báo lỗi)
+            alert('Payment failed. Please try again later.');
+        }
+      })
+      .catch(error => {
+        console.error('Error create bill');
+      });
+    }
+  
+  
+  checkoutBtn.addEventListener("click",function(){
+	  createBill();
+  })
+  function getActiveTableName() {
+    const activeItem = document.querySelector('.list-group-item-action.active');
+    return activeItem ? activeItem.getAttribute('data-table-name') : null;
+  }
+
+  function updateCartItem(parent) {
+    const quantityElement = parent.querySelector('.drink-quantity');
+    const drinkNameElement = parent.querySelector('.card-title');
+    const tableName = getActiveTableName();
+
+    if (quantityElement && drinkNameElement && tableName) {
+      const quantity = parseInt(quantityElement.innerText);
+      const drinkName = drinkNameElement.innerText;
+
+      updateDrinkTotalPrice(parent);
+
+      const data = {
+        drinkName: drinkName,
+        quantity: quantity,
+        tableName: tableName
+      };
+
+      fetch('/order/cart/update-cart-item', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Cart item updated successfully:', data);
+      })
+      .catch(error => {
+        console.error('Error updating cart item:', error);
+      });
+    } else {
+      console.error('One or more elements are missing or table name is null:', { quantityElement, drinkNameElement, tableName });
+    }
+  }
+
+  function removeCartItem(parent) {
+    const drinkNameElement = parent.querySelector('.card-title');
+    const tableName = getActiveTableName();
+
+    if (drinkNameElement && tableName) {
+      const drinkName = drinkNameElement.innerText;
+
+      fetch(`/order/cart/remove-cart-item?drinkName=${drinkName}&tableName=${tableName}`, {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response;
+      })
+      .then(data => {
+        console.log('Cart item removed successfully:');
+        parent.remove();
+        updateTotalPrice();
+      })
+      .catch(error => {
+        console.error('Error removing cart item:', error);
+      });
+    } else {
+      console.error('Drink name element or table name is missing:', { drinkNameElement, tableName });
+    }
+  }
+
+  sidebarItems.forEach(item => {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      sidebarItems.forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+
+      fetch(this.href)
+        .then(response => response.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const newContent = doc.querySelector('#content1').innerHTML;
+          contentSection.innerHTML = newContent;
+          attachEventListeners(); // Re-attach event listeners after updating the DOM
+          updateTotalPrice(); // Recalculate the total price after updating the DOM
+        });
+
+      history.pushState(null, null, this.getAttribute('href'));
+    });
+  });
+
+  attachEventListeners();
+  updateTotalPrice();
+});
+
+
+</script>
+</body>
+</html>

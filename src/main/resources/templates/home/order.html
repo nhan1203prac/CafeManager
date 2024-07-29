@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bootstrap demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+      .list-group-item.active {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <nav class="navbar navbar-expand-lg bg-dark border-body" data-bs-theme="dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="/home">CoffeeShop</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active" aria-current="page" href="/order/cart?tableName=Table 1">Carts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/bill">Bills</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/manage-and-update/areas">Manage and update</a>
+              </li>
+            </ul>
+            <form class="d-flex mx-auto align-items-center mt-1" role="search">
+              <div class="input-group">
+                <input class="form-control" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success" type="submit">Search</button>
+              </div>
+            </form>
+            <ul class="navbar-nav mb-2 mb-lg-0">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fa-solid fa-user"></i>
+                  <span th:text="${session.loggedInUser != null} ? ${session.loggedInUser.username} : ''"></span>
+                </a>
+                <ul class="dropdown-menu">
+                <li th:if="${session.loggedInUser != null}">
+                  <a class="dropdown-item" href="/users/logout">Logout</a>
+                </li>
+                <li th:if="${session.loggedInUser == null}">
+                  <a class="dropdown-item" href="/users/login">Login</a>
+                </li>
+                <li th:if="${session.loggedInUser == null}">
+                  <a class="dropdown-item" href="/users/register">Register</a>
+                </li>
+              </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <div class="row mt-4">
+        <div class="col-md-3">
+          <div class="list-group" id="sidebar">
+            <a th:each="category : ${categorys}" 
+               th:text="${category.categoryName}" 
+               th:href="@{/order/table/category(tableId=${tableId}, category=${category.categoryId})}"
+               th:data-area-id="${category.categoryId}"
+               th:classappend="${category.categoryId == activeCategoryId} ? 'active' : ''"
+               class="list-group-item list-group-item-action">
+            </a>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <div id="content1" class="content-section">
+            <div class="card">
+              <div class="card-header" th:text="${tableName}">
+                
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4 mb-4" th:each="drinkmenu : ${drinksMenu}">
+                    <div class="card h-100">
+                      <div class="card" style="width: 100%;">
+                        <img th:src="${drinkmenu.image}" class="card-img-top" alt="..." style="width: 100%; height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                          <h5 class="card-title" th:text="${drinkmenu.drinkName}"></h5>
+                          <p class="card-text" th:text="${drinkmenu.price}"></p>
+                          <button type="button" class="btn btn-primary add-to-cart-btn" data-bs-toggle="modal" data-bs-target="#exampleModal"
+                                  th:data-drink-name="${drinkmenu.drinkName}"
+                                  th:data-drink-price="${drinkmenu.price}"
+                                  th:data-drink-image="${drinkmenu.image}">Add to cart</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Product Details</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="card">
+              <img id="modal-drink-image" class="card-img-top" alt="..." style="width: 100%; height: 200px; object-fit: cover;">
+              <div class="card-body">
+                <h5 class="card-title" id="modal-drink-name"></h5>
+                <p class="card-text" id="modal-drink-price"></p>
+                <div class="input-group mb-3">
+                  <button class="btn btn-outline-secondary" type="button" id="decrease-quantity">-</button>
+                  <input type="number" class="form-control text-center" id="drink-quantity" value="1" min="1">
+                  <button class="btn btn-outline-secondary" type="button" id="increase-quantity">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="save-changes">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+	  const sidebarItems = document.querySelectorAll('#sidebar .list-group-item');
+	  const contentSection = document.querySelector('#content1');
+	  const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+	  const increaseQuantityButton = document.getElementById('increase-quantity');
+	  const decreaseQuantityButton = document.getElementById('decrease-quantity');
+	  const saveChangesButton = document.getElementById('save-changes');
+	  const modalDrinkName = document.getElementById('modal-drink-name');
+	    const modalDrinkPrice = document.getElementById('modal-drink-price');
+	    const modalDrinkImage = document.getElementById('modal-drink-image');
+	    const drinkQuantityInput = document.getElementById('drink-quantity');
+	  function attachAddToCartEvent() {
+  		const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+
+  		addToCartButtons.forEach(button => {
+    	button.addEventListener('click', function() {
+      const drinkName = this.getAttribute('data-drink-name');
+      const drinkPrice = this.getAttribute('data-drink-price');
+      const drinkImage = this.getAttribute('data-drink-image');
+
+    
+      modalDrinkName.textContent = drinkName;
+      modalDrinkPrice.textContent = drinkPrice;
+      modalDrinkImage.src = drinkImage;
+      drinkQuantityInput.value = 1;
+    });
+  });
+}		
+	  attachAddToCartEvent();
+	  sidebarItems.forEach(item => {
+	    item.addEventListener('click', function(e) {
+	      e.preventDefault();
+	
+	      // Remove active class from all sidebar items
+	      sidebarItems.forEach(i => i.classList.remove('active'));
+	      this.classList.add('active');
+	
+	      // Fetch new content
+	      fetch(this.href)
+	        .then(response => response.text())
+	        .then(html => {
+	          const parser = new DOMParser();
+	          const doc = parser.parseFromString(html, 'text/html');
+	          const newContent = doc.querySelector('#content1').innerHTML;
+	          contentSection.innerHTML = newContent;
+	          
+	          // Reset modal content
+	          resetModal();
+	          attachAddToCartEvent();
+	        });
+	
+	      // Update the URL
+	      history.pushState(null, null, this.getAttribute('href'));
+	    });
+	  });
+	
+	
+	  increaseQuantityButton.addEventListener('click', function() {
+	    const drinkQuantityInput = document.getElementById('drink-quantity');
+	    drinkQuantityInput.value = parseInt(drinkQuantityInput.value) + 1;
+	  });
+	
+	  decreaseQuantityButton.addEventListener('click', function() {
+	    const drinkQuantityInput = document.getElementById('drink-quantity');
+	    if (drinkQuantityInput.value > 1) {
+	      drinkQuantityInput.value = parseInt(drinkQuantityInput.value) - 1;
+	    }
+	  });
+	
+	  function resetModal() {
+	    
+	
+	    modalDrinkName.textContent = '';
+	    modalDrinkPrice.textContent = '';
+	    modalDrinkImage.src = '';
+	    drinkQuantityInput.value = 1;
+	  }
+	  saveChangesButton.addEventListener('click', function() {
+        const drinkName = modalDrinkName.textContent;
+        const drinkPrice = parseFloat(modalDrinkPrice.textContent);
+        const drinkImage = modalDrinkImage.src;
+        const quantity = parseInt(drinkQuantityInput.value);
+        const tableName = document.querySelector('.card-header').textContent;
+
+        const orderItem = {
+          drinkName: drinkName,
+          drinkPrice: drinkPrice,
+          drinkImage: drinkImage,
+          quantity: quantity,
+          tableName: tableName
+        };
+
+        fetch('/order/add-to-cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(orderItem)
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Success:', data);
+          // Optionally close the modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
+          modal.hide();
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+      });
+	});
+	
+	
+	
+    
+    </script>
+  </body>
+</html>
